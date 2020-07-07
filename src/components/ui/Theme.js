@@ -15,10 +15,19 @@ export default createMuiTheme({
     secondary: {
       main: ARC_ORANGE,
     },
-    typography: {
-      h3: {
-        fontWeight: 300,
-      },
+  },
+  typography: {
+    tab: {
+      fontFamily: "Raleway",
+      textTransform: "none",
+      fontWeight: 700,
+      fontSize: "1rem",
+    },
+    estimate: {
+      fontFamily: "Pacifico",
+      fontSize: "1.1rem",
+      textTransform: "none",
+      color: "white",
     },
   },
 });
