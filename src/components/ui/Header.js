@@ -15,6 +15,7 @@ import useMediaQuery from "@material-ui/core/useMediaQuery";
 import useScrollTrigger from "@material-ui/core/useScrollTrigger";
 import MenuIcon from "@material-ui/icons/Menu";
 import { makeStyles } from "@material-ui/styles";
+import classnames from "classnames";
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../../assets/logo.svg";
@@ -114,42 +115,10 @@ const useStyles = makeStyles((theme) => ({
     background: theme.palette.common.arcOrange,
     color: "black",
   },
+  appBar: {
+    zIndex: theme.zIndex.modal + 1,
+  },
 }));
-
-const headerLinks = [
-  {
-    path: "/",
-    label: "Home",
-    index: 0,
-  },
-  {
-    path: "/services",
-    label: "Services",
-    index: 1,
-  },
-  {
-    path: "/revolution",
-    label: "The Revolution",
-    index: 2,
-  },
-  {
-    path: "/about",
-    label: "About",
-    index: 3,
-  },
-  {
-    path: "/contact",
-    label: "Contact",
-    index: 4,
-  },
-];
-
-const menuOptions = [
-  { name: "Services", link: "/services", index: 0 },
-  { name: "Custom Software Development", link: "/customsoftware", index: 1 },
-  { name: "Mobile Application Development", link: "/mobileapps", index: 2 },
-  { name: "Website Development", link: "/websites", index: 3 },
-];
 
 const Header = () => {
   const classes = useStyles();
@@ -163,37 +132,75 @@ const Header = () => {
   const [openMenu, setOpenMenu] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
 
+  const headerOptions = [
+    {
+      link: "/",
+      name: "Home",
+      activeIndex: 0,
+    },
+    {
+      link: "/services",
+      name: "Services",
+      activeIndex: 1,
+      ariaOwns: anchorEl ? "simple-menu" : undefined,
+      ariaHaspopup: anchorEl ? true : undefined,
+      mouseOver: (event) => handleClick(event),
+    },
+    {
+      link: "/revolution",
+      name: "The Revolution",
+      activeIndex: 2,
+    },
+    {
+      link: "/about",
+      name: "About",
+      activeIndex: 3,
+    },
+    {
+      link: "/contact",
+      name: "Contact",
+      activeIndex: 4,
+    },
+  ];
+
+  const menuOptions = [
+    { name: "Services", link: "/services", selectedIndex: 0, activeIndex: 1 },
+    {
+      name: "Custom Software Development",
+      link: "/customsoftware",
+      selectedIndex: 1,
+      activeIndex: 1,
+    },
+    {
+      name: "Mobile Application Development",
+      link: "/mobileapps",
+      selectedIndex: 2,
+      activeIndex: 1,
+    },
+    {
+      name: "Website Development",
+      link: "/websites",
+      selectedIndex: 3,
+      activeIndex: 1,
+    },
+  ];
+
   useEffect(() => {
-    let iterationComplete = false;
-    const currentPath = window.location.pathname;
-    const headerObj = headerLinks.find((link) => link.path === currentPath);
-    if (headerObj && value !== headerObj.index) {
-      setValue(headerObj.index);
-      iterationComplete = true;
-      setSelectedIndex(null);
-    }
-    if (!iterationComplete) {
-      switch (currentPath) {
-        case "/customsoftware":
-          setValue(1);
-          setSelectedIndex(1);
+    [...menuOptions, ...headerOptions].forEach((route) => {
+      switch (window.location.pathname) {
+        case route.link:
+          if (value !== route.activeIndex) {
+            setValue(route.activeIndex);
+            if (route.selectedIndex && route.selectedIndex !== selectedIndex) {
+              setSelectedIndex(route.selectedIndex);
+            }
+          }
           break;
-
-        case "/mobileapps":
-          setValue(1);
-          setSelectedIndex(2);
-          break;
-
-        case "/websites":
-          setValue(1);
-          setSelectedIndex(3);
-          break;
-
         default:
           break;
       }
-    }
-  }, [value]);
+    });
+  }, [value, selectedIndex, headerOptions, menuOptions]);
 
   const handleChange = (_e, newValue) => {
     setValue(newValue);
@@ -223,34 +230,18 @@ const Header = () => {
         onChange={handleChange}
         indicatorColor="primary"
       >
-        <Tab className={classes.tab} component={Link} to={"/"} label="Home" />
-        <Tab
-          aria-owns={anchorEl ? "simple-menu" : undefined}
-          aria-haspopup={anchorEl ? true : undefined}
-          className={classes.tab}
-          component={Link}
-          to={"/services"}
-          label="Services"
-          onMouseOver={(event) => handleClick(event)}
-        />
-        <Tab
-          className={classes.tab}
-          component={Link}
-          to={"/revolution"}
-          label="The Revolution"
-        />
-        <Tab
-          className={classes.tab}
-          component={Link}
-          to={"/about"}
-          label="About"
-        />
-        <Tab
-          className={classes.tab}
-          component={Link}
-          to={"/contact"}
-          label="Contact"
-        />
+        {headerOptions.map((route) => (
+          <Tab
+            key={route.activeIndex}
+            aria-owns={route.ariaOwns}
+            aria-haspopup={route.ariaHaspopup}
+            className={classes.tab}
+            component={Link}
+            to={route.link}
+            label={route.name}
+            onMouseOver={route.mouseOver}
+          />
+        ))}
       </Tabs>
       <Button variant="contained" color="secondary" className={classes.button}>
         Free Estimate
@@ -263,20 +254,24 @@ const Header = () => {
         MenuListProps={{ onMouseLeave: handleClose }}
         classes={{ paper: classes.menu }}
         elevation={0}
+        style={{ zIndex: theme.zIndex.modal + 2 }}
+        keepMounted
       >
         {menuOptions.map((menu) => (
           <MenuItem
-            key={menu.index}
+            key={menu.selectedIndex}
             onClick={() => {
               handleClose();
-              setValue(1);
+              setValue(menu.selectedIndex);
               setSelectedIndex(menu.index);
               handleMenuItemClick(menu.index);
             }}
             component={Link}
             to={menu.link}
             classes={{ root: classes.menuItem }}
-            selected={menu.index === selectedIndex && value === 1}
+            selected={
+              menu.selectedIndex === selectedIndex && value === menu.activeIndex
+            }
           >
             {menu.name}
           </MenuItem>
@@ -295,113 +290,36 @@ const Header = () => {
         onOpen={() => setOpenDrawer(true)}
         classes={{ paper: classes.drawer }}
       >
+        <div className={classes.toolbarMargin} />
         <List disablePadding>
-          <ListItem
-            className={
-              value === 0
-                ? [classes.drawerItemSelected, classes.drawerItem]
-                : classes.drawerItem
-            }
-            onClick={() => {
-              setOpenDrawer(false);
-              setValue(0);
-            }}
-            divider
-            button
-            component={Link}
-            to="/"
-            selected={value === 0}
-          >
-            <ListItemText disableTypography primary="Home" />
-          </ListItem>
-          <ListItem
-            className={
-              value === 1
-                ? [classes.drawerItemSelected, classes.drawerItem]
-                : classes.drawerItem
-            }
-            onClick={() => {
-              setOpenDrawer(false);
-              setValue(1);
-            }}
-            divider
-            button
-            component={Link}
-            to="/services"
-            selected={value === 1}
-          >
-            <ListItemText disableTypography primary="Services" />
-          </ListItem>
-          <ListItem
-            className={
-              value === 2
-                ? [classes.drawerItemSelected, classes.drawerItem]
-                : classes.drawerItem
-            }
-            onClick={() => {
-              setOpenDrawer(false);
-              setValue(2);
-            }}
-            divider
-            button
-            component={Link}
-            to="/revolution"
-            selected={value === 2}
-          >
-            <ListItemText disableTypography primary="The Revolution" />
-          </ListItem>
-          <ListItem
-            className={
-              value === 3
-                ? [classes.drawerItemSelected, classes.drawerItem]
-                : classes.drawerItem
-            }
-            onClick={() => {
-              setOpenDrawer(false);
-              setValue(3);
-            }}
-            divider
-            button
-            component={Link}
-            to="/about"
-            selected={value === 3}
-          >
-            <ListItemText
+          {headerOptions.map((item) => (
+            <ListItem
+              key={item.activeIndex}
               onClick={() => {
                 setOpenDrawer(false);
+                setValue(item.activeIndex);
               }}
-              disableTypography
-              primary="About Us"
-            />
-          </ListItem>
+              divider
+              button
+              component={Link}
+              to={item.link}
+              selected={value === item.activeIndex}
+            >
+              <ListItemText
+                className={
+                  value === item.activeIndex
+                    ? classnames([
+                        classes.drawerItemSelected,
+                        classes.drawerItem,
+                      ])
+                    : classes.drawerItem
+                }
+                disableTypography
+                primary={item.name}
+              />
+            </ListItem>
+          ))}
           <ListItem
-            className={
-              value === 4
-                ? [classes.drawerItemSelected, classes.drawerItem]
-                : classes.drawerItem
-            }
-            onClick={() => {
-              setOpenDrawer(false);
-              setValue(4);
-            }}
-            divider
-            button
-            component={Link}
-            to="/contact"
-            selected={value === 4}
-          >
-            <ListItemText disableTypography primary="Contact Us" />
-          </ListItem>
-          <ListItem
-            className={
-              value === 4
-                ? [
-                    classes.drawerItemSelected,
-                    classes.drawerItem,
-                    classes.drawerItemEstimates,
-                  ]
-                : [classes.drawerItem, classes.drawerItemEstimates]
-            }
             onClick={() => {
               setOpenDrawer(false);
               setValue(5);
@@ -411,8 +329,28 @@ const Header = () => {
             component={Link}
             to="/estimate"
             selected={value === 5}
+            className={
+              value === 5
+                ? classnames([
+                    classes.drawerItemSelected,
+                    classes.drawerItem,
+                    classes.drawerItemEstimates,
+                  ])
+                : classnames([classes.drawerItem, classes.drawerItemEstimates])
+            }
           >
-            <ListItemText disableTypography primary="Free Estimate" />
+            <ListItemText
+              className={
+                value === 5
+                  ? classnames([classes.drawerItemSelected, classes.drawerItem])
+                  : classnames([
+                      classes.drawerItem,
+                      classes.drawerItemEstimates,
+                    ])
+              }
+              disableTypography
+              primary="Free Estimate"
+            />
           </ListItem>
         </List>
       </SwipeableDrawer>
@@ -429,7 +367,7 @@ const Header = () => {
   return (
     <>
       <ElevationScroll>
-        <AppBar position="fixed" color="primary">
+        <AppBar position="fixed" color="primary" className={classes.appBar}>
           <Toolbar disableGutters>
             <Button
               component={Link}
