@@ -120,17 +120,16 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Header = () => {
+const Header = (props) => {
+  const { value, setValue, selectedIndex, setSelectedIndex } = props;
   const classes = useStyles();
   const theme = useTheme();
   const matches = useMediaQuery(theme.breakpoints.down("md"));
   const iOS = process.browser && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-  const [value, setValue] = useState(0);
   const [anchorEl, setAnchorEl] = useState(null);
   const [openDrawer, setOpenDrawer] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(null);
 
   const headerOptions = [
     {
@@ -200,7 +199,14 @@ const Header = () => {
           break;
       }
     });
-  }, [value, selectedIndex, headerOptions, menuOptions]);
+  }, [
+    value,
+    selectedIndex,
+    headerOptions,
+    menuOptions,
+    setSelectedIndex,
+    setValue,
+  ]);
 
   const handleChange = (_e, newValue) => {
     setValue(newValue);
@@ -240,6 +246,7 @@ const Header = () => {
             to={route.link}
             label={route.name}
             onMouseOver={route.mouseOver}
+            disableRipple
           />
         ))}
       </Tabs>
@@ -272,6 +279,7 @@ const Header = () => {
             selected={
               menu.selectedIndex === selectedIndex && value === menu.activeIndex
             }
+            disableRipple
           >
             {menu.name}
           </MenuItem>
